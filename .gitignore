@@ -1,0 +1,12 @@
+# dependencies / build (none needed for this static site)
+node_modules/
+.vercel/
+
+# macOS
+.DS_Store
+._*
+
+# editor
+.vscode/
+.idea/
+*.swp
