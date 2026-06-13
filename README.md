@@ -34,9 +34,10 @@ python3 -m http.server 8000
 
 ## Deploy to Vercel
 
-1. Push this folder to a GitHub repo.
-2. In Vercel, **Add New… → Project**, import the repo.
-3. Framework Preset: **Other** (no build command, output is the repo root). Click **Deploy**.
+This repo is already on GitHub: **https://github.com/samuelbanapour/breach-protocol** (branch `main`).
+
+1. In Vercel, **Add New… → Project**, import `samuelbanapour/breach-protocol`.
+2. Framework Preset: **Other** (no build command, output is the repo root). Click **Deploy**.
 
 Or with the CLI from this folder:
 
