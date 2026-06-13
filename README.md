@@ -1,7 +1,11 @@
 # Breach Protocol — Cyber Defense (web)
 
+### ▶ Play now: **[breach-protocol-web.vercel.app](https://breach-protocol-web.vercel.app)**
+
+[![Play Breach Protocol](og-image.png)](https://breach-protocol-web.vercel.app)
+
 A cybersecurity strategy game that runs entirely in the browser. No build step, no
-dependencies — just static HTML5 Canvas + JavaScript.
+dependencies — just static HTML5 Canvas + JavaScript. Pushes to `main` auto-deploy to Vercel.
 
 Play **two complete modes**:
 
