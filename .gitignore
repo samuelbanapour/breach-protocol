@@ -1,6 +1,10 @@
-# dependencies / build (none needed for this static site)
+# dependencies / build
 node_modules/
 .vercel/
+builds/
+
+# stray macOS app bundle (the desktop build does not belong in the web repo)
+*.app/
 
 # macOS
 .DS_Store
@@ -10,3 +14,4 @@ node_modules/
 .vscode/
 .idea/
 *.swp
+.vercel

@@ -200,6 +200,62 @@ const SFX = {
   achv(){ if(!muted) [[660,0],[880,90],[1175,180]].forEach(([f,d])=>setTimeout(()=>blip(f,0.14,0.13,'triangle'),d)); },
 };
 
+/* ============================ ads (portal monetization) ============================ */
+/* Provider-agnostic. Default 'none' = your own site, NO ads. Per-portal builds set
+   window.BP_PORTAL to 'gamedistribution' | 'crazygames' | 'poki' (see build.sh / PORTALS.md).
+   The core game only calls Ads.showInterstitial() and Ads.showRewarded(cb) — provider details live here. */
+const PORTAL = (typeof window !== 'undefined' && window.BP_PORTAL) || 'none';
+const Ads = {
+  provider: PORTAL, ready: false, cg: null, _rwCb: null, _rwOk: false,
+  init(){
+    try {
+      if (PORTAL === 'gamedistribution') this._gd();
+      else if (PORTAL === 'crazygames') this._crazy();
+      else if (PORTAL === 'poki') this._poki();
+      else this.ready = true;
+    } catch(e){ this.ready = true; }
+  },
+  hasRewarded(){ return this.provider !== 'none'; },
+  _pause(p){ if (typeof g !== 'undefined' && g) g.adPause = p; muted = p; },
+  showInterstitial(){
+    try {
+      if (this.provider === 'gamedistribution' && window.gdsdk) window.gdsdk.showAd();
+      else if (this.provider === 'crazygames' && this.cg) this.cg.ad.requestAd('midgame', { adStarted:()=>this._pause(true), adFinished:()=>this._pause(false), adError:()=>this._pause(false) });
+      else if (this.provider === 'poki' && window.PokiSDK){ this._pause(true); window.PokiSDK.commercialBreak().then(()=>this._pause(false)); }
+    } catch(e){ this._pause(false); }
+  },
+  showRewarded(cb){
+    try {
+      if (this.provider === 'gamedistribution' && window.gdsdk){ this._rwCb=cb; this._rwOk=false; const r=window.gdsdk.showAd('rewarded'); if (r && r.catch) r.catch(()=>{ this._rwCb=null; this._pause(false); cb(false); }); }
+      else if (this.provider === 'crazygames' && this.cg){ this.cg.ad.requestAd('rewarded', { adStarted:()=>this._pause(true), adFinished:()=>{ this._pause(false); cb(true); }, adError:()=>{ this._pause(false); cb(false); } }); }
+      else if (this.provider === 'poki' && window.PokiSDK){ this._pause(true); window.PokiSDK.rewardedBreak().then(ok=>{ this._pause(false); cb(!!ok); }); }
+      else cb(false);
+    } catch(e){ this._pause(false); cb(false); }
+  },
+  _gd(){
+    window.GD_OPTIONS = {
+      gameId: window.BP_GD_GAME_ID || '00000000000000000000000000000000',
+      onEvent: (ev)=>{ try {
+        if (ev.name === 'SDK_READY') this.ready = true;
+        else if (ev.name === 'SDK_GAME_PAUSE') this._pause(true);
+        else if (ev.name === 'SDK_GAME_START'){ this._pause(false); if (this._rwCb){ const cb=this._rwCb; this._rwCb=null; cb(this._rwOk); this._rwOk=false; } }
+        else if (ev.name === 'SDK_REWARDED_WATCH_COMPLETE') this._rwOk = true;
+      } catch(e){} }
+    };
+    const s=document.createElement('script'); s.src='https://html5.api.gamedistribution.com/main.min.js'; s.id='gamedistribution-jssdk'; document.head.appendChild(s);
+  },
+  _crazy(){
+    const s=document.createElement('script'); s.src='https://sdk.crazygames.com/crazygames-sdk-v3.js';
+    s.onload=async()=>{ try{ this.cg=window.CrazyGames.SDK; await this.cg.init(); this.ready=true; } catch(e){} };
+    document.head.appendChild(s);
+  },
+  _poki(){
+    const s=document.createElement('script'); s.src='https://game-cdn.poki.com/scripts/v2/poki-sdk.js';
+    s.onload=()=>{ try{ window.PokiSDK.init().then(()=>{ this.ready=true; window.PokiSDK.gameLoadingFinished(); }); } catch(e){} };
+    document.head.appendChild(s);
+  },
+};
+
 /* ============================ canvas + draw helpers ============================ */
 const canvas = document.getElementById('cv');
 const ctx = canvas.getContext('2d');
@@ -256,21 +312,21 @@ class Shot {
 class Game {
   constructor(){
     this.state='menu'; this.mode='defend'; this.menuSide='defend'; this.win=false;
-    this.toasts=[]; this.speed=1; this.paused=false;
+    this.toasts=[]; this.speed=1; this.paused=false; this.adPause=false;
     this._resetButtons();
   }
   _resetButtons(){
     this.shopRects = []; for(let i=0;i<6;i++) this.shopRects.push([14,92+i*50,206,44]);
     this.abQ=[14,430,100,42]; this.abW=[120,430,100,42]; this.patchR=[14,480,206,34];
     this.startR=[234,606,220,42]; this.speedR=[1100,15,80,36]; this.pauseR=[1190,15,84,36];
-    this.upR=null; this.sellR=null; this.menuRects={}; this.sideRects={}; this.restartR=null; this.achvBtn=null; this.achvBack=null;
+    this.upR=null; this.sellR=null; this.menuRects={}; this.sideRects={}; this.restartR=null; this.achvBtn=null; this.achvBack=null; this.continueR=null;
   }
   start(diff, mode){
     this.mode=mode; this.diff=diff;
     this.enemies=[]; this.towers=[]; this.shots=[]; this.floats=[]; this.pops=[];
     this.placing=null; this.hover=null; this.selected=null; this.speed=1; this.paused=false;
     this.abQt=0; this.abWt=0; this.flash=0; this.t=0; this.seen=new Set(); this.log=[]; this.state='play';
-    this.runTime=0; this.wavesCleared=0; this.best=null; this.toasts=[];
+    this.runTime=0; this.wavesCleared=0; this.best=null; this.toasts=[]; this.adPause=false; this.usedRevive=false;
     this.ev = {
       kills:0, untouchable:false, iron_wall:false, flawless10:false,
       breaches_wave:0, wave_has_apt:false, tower_types:new Set(), towers_built:0,
@@ -406,8 +462,16 @@ class Game {
   }
   updateToasts(dt){ for(const t of [...this.toasts]){ t.life-=dt; if(t.life<=0) this.toasts.splice(this.toasts.indexOf(t),1); } }
 
+  revive(){
+    // rewarded-ad continue: one per game
+    this.usedRevive=true; this.win=false; this.state='play';
+    if(this.mode==='defend') this.core=Math.max(this.core,40);
+    else this.trace=Math.min(this.trace,40);
+    this.logmsg(C.GREEN, this.mode==='defend' ? 'Emergency patch deployed — core restored.' : 'Tracks scrubbed — trace knocked back.');
+  }
+
   update(dt){
-    if(this.state!=='play'||this.paused) return;
+    if(this.state!=='play'||this.paused||this.adPause) return;
     this.t+=dt;
     if(this.flash>0) this.flash-=dt;
     if(this.abQt>0) this.abQt=Math.max(0,this.abQt-dt);
@@ -628,7 +692,15 @@ class Game {
     else { title=this.win?"CORE BREACHED - YOU'RE IN":'TRACED & CAUGHT'; if(this.win) msg=`Breached the target in ${fmtTime(this.runTime)} at ${Math.floor(this.trace)}% trace.`; else { const pct=Math.round(100*this.core/this.coreMax); msg=`The blue team traced you. Target was still at ${pct}% integrity.`; } const bs=this.best!=null?fmtTime(this.best):'--'; sub=`Fastest breach (${this.dconf.label}): ${bs}`; }
     text(title,WIN_W/2,cy+50,30,this.win?C.GREEN:C.RED,{center:true,bold:true});
     text(msg,WIN_W/2,cy+100,13,C.INK,{center:true}); text(sub,WIN_W/2,cy+124,12,C.AMBER,{center:true});
-    this.restartR=[WIN_W/2-90,cy+ch-64,180,40]; const [rx,ry,rw,rh]=this.restartR;
+    // rewarded "continue" — only on a loss, once per game, when a portal ad provider exists
+    this.continueR = null;
+    if(!this.win && Ads.hasRewarded() && !this.usedRevive){
+      this.continueR=[WIN_W/2-150,cy+ch-112,300,40]; const [ex,ey,ew,eh]=this.continueR;
+      rectFill(ex,ey,ew,eh,'#0c1530',8); rectLine(ex,ey,ew,eh,C.AMBER,2,8);
+      const label = this.mode==='defend' ? '▶ Watch ad — restore core & continue' : '▶ Watch ad — cut trace & continue';
+      text(label,ex+ew/2,ey+eh/2,12,C.AMBER,{center:true,bold:true});
+    }
+    this.restartR=[WIN_W/2-90,cy+ch-58,180,40]; const [rx,ry,rw,rh]=this.restartR;
     rectFill(rx,ry,rw,rh,'#0a8f5b',8); text('Back to Menu',rx+rw/2,ry+rh/2,14,'#02110c',{center:true,bold:true});
   }
   drawToasts(){
@@ -644,7 +716,11 @@ class Game {
   }
   /* -------- input -------- */
   click(mx,my){
-    if(this.state==='over'){ if(this.restartR&&inRect(mx,my,this.restartR)) this.state='menu'; return; }
+    if(this.state==='over'){
+      if(this.continueR&&inRect(mx,my,this.continueR)){ Ads.showRewarded((ok)=>{ if(ok) this.revive(); }); return; }
+      if(this.restartR&&inRect(mx,my,this.restartR)){ Ads.showInterstitial(); this.state='menu'; }
+      return;
+    }
     if(this.state!=='play') return;
     if(inRect(mx,my,this.speedR)){ this.speed=this.speed===1?2:1; return; }
     if(inRect(mx,my,this.pauseR)){ this.paused=!this.paused; return; }
@@ -744,6 +820,7 @@ window.addEventListener('keydown', ev=>{
 /* ============================ main loop ============================ */
 const g = new Game();
 UNLOCKED = loadUnlocked();
+Ads.init();
 let last=performance.now();
 function frame(now){
   let dt=(now-last)/1000; last=now; if(dt>0.05) dt=0.05;

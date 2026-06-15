@@ -30,6 +30,30 @@ canvas#cv {
 #hint {
   margin: 0; font-size: 11px; color: #6b86b8; text-align: center; max-width: 1000px;
 }
+
+/* ---- rotate-to-landscape prompt (portrait phones) ---- */
+#rotate { display: none; }
+#rotate .ic {
+  font-size: 64px; color: #00e5ff; animation: spin 2.4s ease-in-out infinite;
+  text-shadow: 0 0 24px rgba(0,229,255,.5);
+}
+@keyframes spin { 0%,100% { transform: rotate(-25deg); } 50% { transform: rotate(25deg); } }
+
+/* On touch devices in portrait, hide the game and show the rotate prompt. */
+@media (pointer: coarse) and (orientation: portrait) {
+  #frame { display: none; }
+  #rotate {
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px;
+    font-size: 18px; color: #cfe9ff; text-align: center; padding: 28px;
+  }
+}
+/* On touch devices in landscape, fill the screen. */
+@media (pointer: coarse) and (orientation: landscape) {
+  #frame { padding: 0; height: 100vh; gap: 0; }
+  canvas#cv { max-width: 100vw; max-height: 100vh; border: none; border-radius: 0; }
+  #hint { display: none; }
+}
 @media (max-width: 700px) {
   #hint { font-size: 10px; }
 }
