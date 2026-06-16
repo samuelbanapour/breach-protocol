@@ -7,6 +7,8 @@
 A cybersecurity strategy game that runs entirely in the browser. No build step, no
 dependencies — just static HTML5 Canvas + JavaScript. Pushes to `main` auto-deploy to Vercel.
 
+Version history: see [CHANGELOG.md](CHANGELOG.md).
+
 Play **two complete modes**:
 
 - **🔵 Blue Team (defend)** — a tower-defense. Waves of cyber-attacks (Malware, DDoS,
