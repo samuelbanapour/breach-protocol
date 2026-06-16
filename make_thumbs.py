@@ -61,12 +61,18 @@ def ltext(s,txt,x,cy,f,color):
 def make(W,H):
     s=bg(W,H); ar=W/H
     if ar>=1.3:                      # landscape
-        R=int(H*0.36); cx=int(W*0.74); shield(s,cx,H//2,R)
-        lx=int(W*0.06); tw=int(W*0.50)
-        fb=fit("BREACH",tw,H*0.26); fp=fit("PROTOCOL",tw,H*0.26)
-        ltext(s,"BREACH",lx,int(H*0.40),fb,NEON); ltext(s,"PROTOCOL",lx,int(H*0.40)+int(fb.get_height()*0.95),fp,NEON)
-        if W>=600:
-            ltext(s,"Cyber tower-defense — defend or breach",lx,int(H*0.78),fit("Cyber tower-defense — defend or breach",tw,H*0.07),DIM)
+        R=int(H*0.34); cx=int(W*0.76); cy=H//2; shield(s,cx,cy,R)
+        lx=int(W*0.06); gap=int(W*0.045)
+        tw=max(40, (cx-R-int(R*0.11)) - lx - gap)    # keep text clear of the shield
+        f=fit("PROTOCOL", tw, H*0.30)                # size the longer word; reuse for both
+        bh=f.get_height(); has_tag = W>=600
+        block=bh*1.9 + (bh*0.75 if has_tag else 0)
+        y=cy - block/2 + bh*0.5
+        ltext(s,"BREACH",lx,int(y),f,NEON); y+=bh*0.95
+        ltext(s,"PROTOCOL",lx,int(y),f,NEON); y+=bh*0.95
+        if has_tag:
+            tag="Cyber tower-defense — defend or breach"
+            ltext(s,tag,lx,int(y),fit(tag,tw,H*0.075),DIM)
     elif ar>=0.85:                   # square
         R=int(W*0.30); shield(s,W//2,int(H*0.40),R)
         fb=fit("BREACH",int(W*0.9),W*0.20); ctext(s,"BREACH",W//2,int(H*0.74),fb,NEON)
