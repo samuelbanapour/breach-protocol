@@ -21,7 +21,7 @@ for portal in $PORTALS; do
 
   # GameDistribution also needs your game id
   if [ "$portal" = "gamedistribution" ]; then
-    sed -i.bak "s#window.BP_PORTAL = 'gamedistribution';#window.BP_PORTAL = 'gamedistribution'; window.BP_GD_GAME_ID = 'REPLACE_WITH_YOUR_GAMEDISTRIBUTION_GAME_ID';#" "$out/index.html"
+    sed -i.bak "s#window.BP_PORTAL = 'gamedistribution';#window.BP_PORTAL = 'gamedistribution'; window.BP_GD_GAME_ID = 'abca00ba8c594a07aa0c5eba4c3212c3';#" "$out/index.html"
     rm -f "$out/index.html.bak"
   fi
 
