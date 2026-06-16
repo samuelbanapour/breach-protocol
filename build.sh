@@ -26,8 +26,10 @@ for portal in $PORTALS; do
   fi
 
   find "$out" -name '._*' -delete 2>/dev/null || true   # strip exFAT detritus
-  ( cd builds && rm -f "$portal.zip" && zip -qr "$portal.zip" "$portal" -x '*/._*' '*/.DS_Store' )
-  echo "✓ builds/$portal  (+ builds/$portal.zip)"
+  # zip the CONTENTS (index.html at the zip root — portals require this), not the folder
+  rm -f "builds/$portal.zip"
+  ( cd "$out" && zip -qr "../$portal.zip" . -x '._*' '*/._*' '.DS_Store' )
+  echo "✓ builds/$portal  (+ builds/$portal.zip, index.html at root)"
 done
 
 echo
