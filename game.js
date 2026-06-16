@@ -186,6 +186,25 @@ const ACHIEVEMENTS = [
   ['m_legend','Legend','Unlock 60 achievements.','GENERAL', g=>UNLOCKED.size>=60],
 ];
 
+/* ============================ what's new (in-game changelog) ============================ */
+const CHANGELOG = [
+  { v:'1.2.0', date:'Jun 2026', notes:[
+    'Now plays great on mobile — full-screen in landscape.',
+    'Optional rewarded "Continue" to revive after a loss.',
+    'UI polish and faster loading.',
+  ]},
+  { v:'1.1.0', date:'Jun 2026', notes:[
+    'Launched on the web with shareable links.',
+    'Cleaner menus and the achievements browser.',
+  ]},
+  { v:'1.0.0', date:'Jun 2026', notes:[
+    'Two modes: Blue Team (defend) and Red Hat (attack).',
+    '65 achievements with saved progress and best-run records.',
+    '6 threats + APT bosses vs 6 defenses; smart, escalating AI.',
+  ]},
+];
+const APP_VERSION = CHANGELOG[0].v;
+
 /* ============================ sound (Web Audio) ============================ */
 let actx = null;
 function audio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ actx=null; } } if(actx&&actx.state==='suspended') actx.resume(); return actx; }
@@ -319,7 +338,7 @@ class Game {
     this.shopRects = []; for(let i=0;i<6;i++) this.shopRects.push([14,92+i*50,206,44]);
     this.abQ=[14,430,100,42]; this.abW=[120,430,100,42]; this.patchR=[14,480,206,34];
     this.startR=[234,606,220,42]; this.speedR=[1100,15,80,36]; this.pauseR=[1190,15,84,36];
-    this.upR=null; this.sellR=null; this.menuRects={}; this.sideRects={}; this.restartR=null; this.achvBtn=null; this.achvBack=null; this.continueR=null;
+    this.upR=null; this.sellR=null; this.menuRects={}; this.sideRects={}; this.restartR=null; this.achvBtn=null; this.achvBack=null; this.continueR=null; this.whatsNewBtn=null; this.whatsBack=null;
   }
   start(diff, mode){
     this.mode=mode; this.diff=diff;
@@ -760,6 +779,8 @@ function drawMenu(g){
   text('Cyber Defense  //  Choose your side',cx,108,14,C.DIM,{center:true});
   const nun=[...UNLOCKED].filter(id=>ACHIEVEMENTS.some(a=>a[0]===id)).length;
   g.achvBtn=[WIN_W-258,20,230,34]; rectFill(...g.achvBtn,'#0c1530',8); rectLine(...g.achvBtn,C.AMBER,1,8); text(`* ACHIEVEMENTS  ${nun}/${ACHIEVEMENTS.length}`,g.achvBtn[0]+g.achvBtn[2]/2,g.achvBtn[1]+17,12,C.AMBER,{center:true});
+  g.whatsNewBtn=[28,20,196,34]; rectFill(...g.whatsNewBtn,'#0c1530',8); rectLine(...g.whatsNewBtn,C.NEON,1,8); text("WHAT'S NEW",g.whatsNewBtn[0]+g.whatsNewBtn[2]/2,g.whatsNewBtn[1]+17,12,C.NEON,{center:true});
+  if(loadScores().lastSeenVersion !== APP_VERSION){ const bx=g.whatsNewBtn[0]+g.whatsNewBtn[2]-4, by=g.whatsNewBtn[1]+2; circle(bx,by,8,C.RED); text('!',bx,by,11,'#fff',{center:true,bold:true}); }
   const sides=[['defend','BLUE TEAM','Defend the network',C.NEON],['attack','RED HAT','Attack & breach it',C.RED]];
   const sw=230,sgap=24; let sx=cx-(sw*2+sgap)/2; g.sideRects={};
   for(const [sid,name,sub,col] of sides){ const rect=[sx,140,sw,54]; g.sideRects[sid]=rect; const sel=side===sid; rectFill(...rect,sel?'#0c1630':'#090d1a',10); rectLine(...rect,col,sel?3:1,10); text(name,sx+sw/2,158,16,sel?col:C.INK,{center:true,bold:true}); text(sub,sx+sw/2,178,11,C.DIM,{center:true}); sx+=sw+sgap; }
@@ -796,6 +817,24 @@ function drawAchievements(g){
   });
   g.achvBack=[cx-90,WIN_H-50,180,36]; rectFill(...g.achvBack,'#0c1530',8); rectLine(...g.achvBack,C.NEON,1,8); text('< Back',cx,WIN_H-32,13,C.INK,{center:true});
 }
+function drawWhatsNew(g){
+  ctx.fillStyle=C.BG; ctx.fillRect(0,0,WIN_W,WIN_H); const cx=WIN_W/2;
+  text("WHAT'S NEW",cx,40,30,C.NEON,{center:true,bold:true});
+  text('Breach Protocol — version history',cx,76,12,C.DIM,{center:true});
+  const lx=cx-360, w=720; let y=124;
+  for(const e of CHANGELOG){
+    text('v'+e.v,lx,y,18,C.AMBER,{bold:true});
+    text(e.date,lx+130,y+5,12,C.DIM);
+    y+=30;
+    for(const n of e.notes){
+      circle(lx+6,y+8,3,C.NEON);
+      for(const ln of wrap(n,13,w-26)){ text(ln,lx+20,y,13,C.INK); y+=20; }
+      y+=2;
+    }
+    y+=18;
+  }
+  g.whatsBack=[cx-90,WIN_H-50,180,36]; rectFill(...g.whatsBack,'#0c1530',8); rectLine(...g.whatsBack,C.NEON,1,8); text('< Back',cx,WIN_H-32,13,C.INK,{center:true});
+}
 
 /* ============================ input wiring ============================ */
 let mouse=[0,0];
@@ -805,16 +844,18 @@ canvas.addEventListener('pointerdown', ev=>{
   ev.preventDefault(); audio(); const [x,y]=evtPos(ev); mouse=[x,y];
   if(g.state==='menu'){
     if(g.achvBtn&&inRect(x,y,g.achvBtn)){ g.state='achv'; return; }
+    if(g.whatsNewBtn&&inRect(x,y,g.whatsNewBtn)){ const sc=loadScores(); sc.lastSeenVersion=APP_VERSION; saveScores(sc); g.state='whatsnew'; return; }
     for(const sid in g.sideRects){ if(inRect(x,y,g.sideRects[sid])){ g.menuSide=sid; return; } }
     for(const diff in g.menuRects){ if(inRect(x,y,g.menuRects[diff])){ g.start(diff,g.menuSide); return; } }
   } else if(g.state==='achv'){ if(g.achvBack&&inRect(x,y,g.achvBack)) g.state='menu'; }
+  else if(g.state==='whatsnew'){ if(g.whatsBack&&inRect(x,y,g.whatsBack)) g.state='menu'; }
   else g.click(x,y);
 }, {passive:false});
 window.addEventListener('keydown', ev=>{
   const k=ev.key.toLowerCase();
   if(k===' ') ev.preventDefault();
   if(g.state==='play') g.key(k);
-  else if(g.state==='achv'&&k==='escape') g.state='menu';
+  else if((g.state==='achv'||g.state==='whatsnew')&&k==='escape') g.state='menu';
 });
 
 /* ============================ main loop ============================ */
@@ -828,6 +869,7 @@ function frame(now){
   g.updateToasts(dt);
   if(g.state==='menu') drawMenu(g);
   else if(g.state==='achv') drawAchievements(g);
+  else if(g.state==='whatsnew') drawWhatsNew(g);
   else g.draw();
   requestAnimationFrame(frame);
 }
