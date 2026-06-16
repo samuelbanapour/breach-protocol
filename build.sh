@@ -6,6 +6,7 @@
 #   ./build.sh crazygames     # build just one
 set -e
 cd "$(dirname "$0")"
+export COPYFILE_DISABLE=1   # don't let macOS/exFAT inject ._AppleDouble files
 
 ASSETS="game.js style.css icon.svg og-image.png"
 PORTALS="${*:-gamedistribution crazygames poki}"
@@ -24,7 +25,8 @@ for portal in $PORTALS; do
     rm -f "$out/index.html.bak"
   fi
 
-  ( cd builds && rm -f "$portal.zip" && zip -qr "$portal.zip" "$portal" )
+  find "$out" -name '._*' -delete 2>/dev/null || true   # strip exFAT detritus
+  ( cd builds && rm -f "$portal.zip" && zip -qr "$portal.zip" "$portal" -x '*/._*' '*/.DS_Store' )
   echo "✓ builds/$portal  (+ builds/$portal.zip)"
 done
 
