@@ -60,7 +60,7 @@ def ltext(s,txt,x,cy,f,color):
 
 def make(W,H):
     s=bg(W,H); ar=W/H
-    if ar>=1.3:                      # landscape
+    if ar>=1.24:                     # landscape (incl. ~630x500 itch cover)
         R=int(H*0.34); cx=int(W*0.76); cy=H//2; shield(s,cx,cy,R)
         lx=int(W*0.06); gap=int(W*0.045)
         tw=max(40, (cx-R-int(R*0.11)) - lx - gap)    # keep text clear of the shield
@@ -88,7 +88,8 @@ OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),"assets")
 os.makedirs(OUT,exist_ok=True)
 for (W,H,name) in [(512,384,"thumb_512x384"),(512,512,"thumb_512x512"),(200,120,"thumb_200x120"),
                    (1280,720,"marketing_1280x720"),(720,1280,"marketing_720x1280"),
-                   (1280,550,"marketing_1280x550")]:
+                   (1280,550,"marketing_1280x550"),
+                   (630,500,"itch_cover_630x500")]:
     pygame.image.save(make(W,H), os.path.join(OUT,name+".png"))
     print("rendered",name)
 pygame.quit()
