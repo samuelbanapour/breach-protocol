@@ -1,0 +1,23 @@
+{
+  "name": "breach-protocol",
+  "version": "0.1.0",
+  "description": "Breach Protocol — Cyber Defense. Downloadable desktop (Tauri) + Android (Capacitor) wrappers for the static HTML5 game.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dist": "node scripts/make-dist.mjs",
+    "tauri": "tauri",
+    "desktop:dev": "npm run dist && tauri dev",
+    "desktop:build": "npm run dist && tauri build",
+    "android:sync": "npm run dist && cap sync android",
+    "android:open": "cap open android"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  }
+}

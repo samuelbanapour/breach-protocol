@@ -1,0 +1,17 @@
+[package]
+name = "breach-protocol"
+version = "0.1.0"
+description = "Breach Protocol — Cyber Defense"
+authors = ["Samuel Banapour"]
+edition = "2021"
+rust-version = "1.77.2"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[features]
+# This feature is used for production builds where `devUrl` is not used.
+custom-protocol = ["tauri/custom-protocol"]

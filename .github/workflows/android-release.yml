@@ -1,0 +1,61 @@
+name: Android Release (APK)
+
+# Build a downloadable Android APK with Capacitor + Gradle on Linux.
+# Builds an unsigned debug APK by default (installable for sideloading / itch.io).
+# For a Play Store .aab or a signed release APK, add a keystore + signing secrets and
+# switch the gradle task to assembleRelease / bundleRelease (see PACKAGING.md).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install npm deps
+        run: npm ci
+
+      - name: Build offline web payload (dist/)
+        run: node scripts/make-dist.mjs
+
+      - name: Sync web assets into Android project
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: breach-protocol-android-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+
+      - name: Attach APK to GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: 'Breach Protocol ${{ github.ref_name }}'
+          files: android/app/build/outputs/apk/debug/*.apk

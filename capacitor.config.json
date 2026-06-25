@@ -1,0 +1,8 @@
+{
+  "appId": "com.samuelbanapour.breachprotocol",
+  "appName": "Breach Protocol",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}
