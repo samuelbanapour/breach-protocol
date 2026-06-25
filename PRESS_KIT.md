@@ -41,8 +41,8 @@ achievements and saved progress.
 ## Facts
 - **Genre:** Strategy / Tower Defense
 - **Tags:** tower-defense, cybersecurity, hacking, defense, singleplayer
-- **Platforms:** Web (browser) · Windows & macOS (desktop build) · Android
-- **Price:** Free to play (web, ad-supported) · **$2.00** ad-free desktop build (Windows & macOS) on itch.io
+- **Platforms:** Web (browser) · Windows, macOS & Linux (desktop build) · Android
+- **Price:** Free to play (web, ad-supported) · **$2.00** ad-free desktop build (Windows, macOS & Linux) on itch.io
 - **Players:** Single-player
 - **Input:** Mouse / touch (+ keyboard hotkeys)
 - **Languages:** English
