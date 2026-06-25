@@ -1,5 +1,26 @@
 apply plugin: 'com.android.application'
 
+// --- Release signing -------------------------------------------------------
+// Credentials resolve from env vars first (CI) then android/keystore.properties
+// (local dev). Both the keystore file and keystore.properties are gitignored and
+// never committed. If no credentials are present, the release build is left
+// unsigned so plain debug builds still work.
+def keystorePropsFile = rootProject.file("keystore.properties")
+def signingProps = new Properties()
+if (keystorePropsFile.exists()) {
+    signingProps.load(new FileInputStream(keystorePropsFile))
+}
+def resolveSigning = { String propKey, String envKey ->
+    def v = System.getenv(envKey)
+    return (v != null && !v.isEmpty()) ? v : signingProps.getProperty(propKey)
+}
+def ksStoreFile = resolveSigning("storeFile", "KEYSTORE_PATH")
+def ksStorePassword = resolveSigning("storePassword", "KEYSTORE_PASSWORD")
+def ksKeyAlias = resolveSigning("keyAlias", "KEY_ALIAS")
+def ksKeyPassword = resolveSigning("keyPassword", "KEY_PASSWORD")
+def hasReleaseSigning = ksStoreFile && ksStorePassword && ksKeyAlias && ksKeyPassword
+// ---------------------------------------------------------------------------
+
 android {
     namespace "com.samuelbanapour.breachprotocol"
     compileSdk rootProject.ext.compileSdkVersion
@@ -16,10 +37,23 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    if (hasReleaseSigning) {
+        signingConfigs {
+            release {
+                storeFile file(ksStoreFile)
+                storePassword ksStorePassword
+                keyAlias ksKeyAlias
+                keyPassword ksKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

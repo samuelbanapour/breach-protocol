@@ -54,12 +54,9 @@ npm run android:open     # opens Android Studio; Build > Build APK
 - Icons are generated from `icon.svg` (`npx tauri icon`), committed under `src-tauri/icons/`
   and `android/app/src/main/res/mipmap-*`.
 
-## Going from debug APK to a signed release / Play Store build
+## Android signing
 
-The Android workflow builds an **unsigned debug APK** — installable by sideloading and fine for
-itch.io. For a signed release APK or a Play `.aab`:
-
-1. Create a keystore and add `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`
-   as GitHub repo secrets.
-2. Wire signing into `android/app/build.gradle` (`signingConfigs`).
-3. Switch the gradle task to `assembleRelease` (APK) or `bundleRelease` (AAB).
+Signing is already wired into `android/app/build.gradle` and the Android workflow. With the
+keystore secrets set, CI builds a **signed** `app-release.apk` + `app-release.aab`; without them
+it falls back to an unsigned debug APK. See **[SIGNING.md](SIGNING.md)** for the one-time keystore
+generation and the four GitHub secrets to add.

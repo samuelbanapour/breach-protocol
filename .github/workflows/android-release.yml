@@ -1,9 +1,9 @@
-name: Android Release (APK)
+name: Android Release (signed APK + AAB)
 
-# Build a downloadable Android APK with Capacitor + Gradle on Linux.
-# Builds an unsigned debug APK by default (installable for sideloading / itch.io).
-# For a Play Store .aab or a signed release APK, add a keystore + signing secrets and
-# switch the gradle task to assembleRelease / bundleRelease (see PACKAGING.md).
+# Build a downloadable Android app with Capacitor + Gradle on Linux.
+# If the KEYSTORE_BASE64 secret (+ password/alias secrets) is set, this produces a
+# SIGNED release APK and AAB. If not, it falls back to an unsigned debug APK so the
+# workflow never hard-fails. See SIGNING.md for the secrets to configure.
 on:
   push:
     tags: ['v*']
@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      # Consumed by android/app/build.gradle's signing config.
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -26,7 +31,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'   # Gradle 8.2.1 supports up to Java 20; 17 is the safe, supported choice
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -40,22 +45,52 @@ jobs:
       - name: Sync web assets into Android project
         run: npx cap sync android
 
-      - name: Build debug APK
+      - name: Decode signing keystore (if configured)
+        id: keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "Keystore decoded — building SIGNED release."
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "No KEYSTORE_BASE64 secret — building unsigned debug APK."
+          fi
+
+      - name: Build signed release (APK + AAB)
+        if: steps.keystore.outputs.signed == 'true'
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease bundleRelease
+
+      - name: Build debug APK (no signing secrets)
+        if: steps.keystore.outputs.signed == 'false'
         run: |
           cd android
           chmod +x ./gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK artifact
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          find android/app/build/outputs -name '*.apk' -exec cp {} out/ \;
+          find android/app/build/outputs -name '*.aab' -exec cp {} out/ \;
+          ls -la out
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: breach-protocol-android-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: breach-protocol-android
+          path: out/*
 
-      - name: Attach APK to GitHub release
+      - name: Attach to GitHub release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           name: 'Breach Protocol ${{ github.ref_name }}'
-          files: android/app/build/outputs/apk/debug/*.apk
+          files: out/*
