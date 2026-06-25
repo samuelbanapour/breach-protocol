@@ -42,7 +42,7 @@ achievements and saved progress.
 - **Genre:** Strategy / Tower Defense
 - **Tags:** tower-defense, cybersecurity, hacking, defense, singleplayer
 - **Platforms:** Web (browser) · Windows & macOS (desktop build) · Android
-- **Price:** Free
+- **Price:** Free to play (web, ad-supported) · **$2.00** ad-free desktop build (Windows & macOS) on itch.io
 - **Players:** Single-player
 - **Input:** Mouse / touch (+ keyboard hotkeys)
 - **Languages:** English
@@ -56,8 +56,10 @@ achievements and saved progress.
 - **itch.io:** (add once published)
 
 ## Builds for creators
-- Easiest: share the web link above (no install).
-- Downloadable: Windows/macOS desktop build (Tauri) and Android APK (Capacitor) from the repo.
+- Easiest: share the free web link above (no install).
+- For press/streamers: the ad-free desktop build is $2 on itch.io — generate **free itch.io
+  download keys** for it and hand those to creators (e.g. via Keymailer) so they get it at no cost.
+- Also available: Android APK (Capacitor) from the repo.
 
 ## Art assets (in `assets/`)
 - Key art / banner: `marketing_1280x720.jpg`, `marketing_1280x550.jpg`
