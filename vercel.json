@@ -1,8 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "echo skip install (static site; app wrappers build in GitHub Actions)",
-  "buildCommand": "echo skip build (serving static files from repo root)",
-  "outputDirectory": ".",
   "cleanUrls": true,
   "headers": [
     {
