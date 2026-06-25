@@ -53,7 +53,7 @@ achievements and saved progress.
 - **Play (web):** https://breachprotocol.vercel.app
 - **Alias:** https://breachprotocol.gamesolodev.is-a.dev
 - **Source:** https://github.com/samuelbanapour/breach-protocol
-- **itch.io:** (add once published)
+- **itch.io:** https://samuelbanapour.itch.io/breach-protocol
 
 ## Builds for creators
 - Easiest: share the free web link above (no install).
