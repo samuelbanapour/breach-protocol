@@ -89,7 +89,8 @@ os.makedirs(OUT,exist_ok=True)
 for (W,H,name) in [(512,384,"thumb_512x384"),(512,512,"thumb_512x512"),(200,120,"thumb_200x120"),
                    (1280,720,"marketing_1280x720"),(720,1280,"marketing_720x1280"),
                    (1280,550,"marketing_1280x550"),
-                   (630,500,"itch_cover_630x500")]:
+                   (630,500,"itch_cover_630x500"),
+                   (920,430,"keymailer_capsule_920x430")]:
     pygame.image.save(make(W,H), os.path.join(OUT,name+".png"))
     print("rendered",name)
 pygame.quit()
