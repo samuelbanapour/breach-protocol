@@ -22,6 +22,10 @@ android/keystore.properties
 # stray macOS app bundle (the desktop build does not belong in the web repo)
 *.app/
 
+# python (asset generators)
+__pycache__/
+*.pyc
+
 # macOS
 .DS_Store
 ._*
