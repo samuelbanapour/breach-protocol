@@ -25,6 +25,11 @@ for portal in $PORTALS; do
     rm -f "$out/index.html.bak"
   fi
 
+  # Each portal serves ads via its own SDK (injected by game.js), so strip the
+  # AdSense loader from the <head> — never two ad systems in one build, and it
+  # keeps the portals' competing-ad-script policies happy.
+  perl -0pi -e 's/\s*<!-- Google AdSense.*?<\/script>\n//s' "$out/index.html"
+
   find "$out" -name '._*' -delete 2>/dev/null || true   # strip exFAT detritus
   # zip the CONTENTS (index.html at the zip root — portals require this), not the folder
   rm -f "builds/$portal.zip"
